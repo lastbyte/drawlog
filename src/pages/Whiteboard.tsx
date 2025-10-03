@@ -222,9 +222,16 @@ export default function Whiteboard() {
           defaultSize={
             isEditorVisible ? 100 - (boardSplitterPosition ?? 0) : 100
           }
+          minSize={30}
         >
-          <div className="flex h-full flex-col p-2">
-            <div className="flex-1">
+          <div
+            className="flex h-full flex-col p-2"
+            style={{ minHeight: "400px" }}
+          >
+            <div
+              className="flex-1"
+              style={{ minWidth: "400px", minHeight: "400px" }}
+            >
               <BoardComponent
                 initialData={board?.excalidraw_content || undefined}
                 onChange={(data) => setWhiteboardData(data)}
