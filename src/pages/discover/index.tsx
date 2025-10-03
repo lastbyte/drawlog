@@ -1,5 +1,4 @@
 import {
-  type ColumnDef,
   type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
@@ -10,24 +9,9 @@ import {
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  PencilIcon,
-  StarIcon,
-  Trash2Icon,
-} from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -37,10 +21,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router";
 import { type Board, getAllBoards } from "@/lib/apis";
 import { setBreadCrumbs } from "@/store/slices/appSlice";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router";
 import { columns } from "./discoverTableColumns";
 
 export type Whiteboard = {

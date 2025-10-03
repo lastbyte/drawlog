@@ -1,6 +1,6 @@
-import { Tldraw, type TLUiEventData, type TLUiEventMap } from "tldraw";
-import "tldraw/tldraw.css";
 import { useEffect, useRef } from "react";
+import { Tldraw } from "tldraw";
+import "tldraw/tldraw.css";
 
 interface BoardProps {
   initialData?: string;

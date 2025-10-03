@@ -21,7 +21,7 @@ import type { Whiteboard } from ".";
 export const columns: ColumnDef<Whiteboard>[] = [
   {
     accessorKey: "id",
-    header: ({ column }) => {
+    header: () => {
       return <span className="cursor-pointer font-bold">ID</span>;
     },
     cell: ({ row }) => <div className="lowercase">{row.getValue("id")}</div>,
