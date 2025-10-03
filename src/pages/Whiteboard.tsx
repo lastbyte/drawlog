@@ -12,6 +12,7 @@ import {
   createBoard,
   getBoard,
   updateBoardContent,
+  updateBoardName,
   type Board,
 } from "@/lib/apis";
 import { useAppDispatch, useAppSelector, type RootState } from "@/store";
@@ -104,6 +105,9 @@ export default function Whiteboard() {
         // update the url with the new board id
         window.history.replaceState(null, "", `/whiteboard?id=${board.id}`);
         setBoard(board);
+        // Initialize local state for new board
+        setNotes(board.richtext || "");
+        setWhiteboardData(board.excalidraw_content || "");
       });
     } else {
       // load the existing whiteboard
@@ -112,6 +116,9 @@ export default function Whiteboard() {
       getBoard(boardId).then((board) => {
         if (board) {
           setBoard(board);
+          // Also populate the local state with the board data
+          setNotes(board.richtext || "");
+          setWhiteboardData(board.excalidraw_content || "");
         }
       });
     }
@@ -119,6 +126,14 @@ export default function Whiteboard() {
 
   function handleOnSave() {
     saveToLocalStorage();
+  }
+
+  function handleUpdateBoardName(name: string) {
+    if (board) {
+      updateBoardName(board.id, name).then(() => {
+        setBoard((prev) => (prev ? { ...prev, name: name } : prev));
+      });
+    }
   }
 
   const toggleEditor = () => {
@@ -151,7 +166,10 @@ export default function Whiteboard() {
   return (
     <div className="flex h-full w-full flex-col gap-2">
       <div className="mb-2 flex items-center justify-between px-2">
-        <WhiteboardHeading board={board} />
+        <WhiteboardHeading
+          name={board?.name || "Loading..."}
+          handleUpdateBoardName={handleUpdateBoardName}
+        />
         <div className="flex gap-2 items-center">
           {lastSaveTime && saveStatus !== "saving" && (
             <div className="text-xs text-gray-500 mr-2">
@@ -205,7 +223,7 @@ export default function Whiteboard() {
             dispatch(setBoardSplitterPosition(size));
           }}
         >
-          <div className="flex h-full flex-col">
+          <div className="flex h-full flex-col pr-2">
             <div className="flex-1">
               <RichtextEditor
                 initialValue={board?.richtext || ""}

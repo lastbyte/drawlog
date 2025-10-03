@@ -1,36 +1,40 @@
 import { EditIcon, SaveIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateBoardName, type Board } from "@/lib/apis";
 
 interface WhiteboardHeadingProps {
-  board: Board | undefined;
+  name: string;
+  handleUpdateBoardName: (name: string) => void;
 }
-export default function WhiteboardHeading({ board }: WhiteboardHeadingProps) {
-  const [name, setName] = useState(board?.name || "");
+export default function WhiteboardHeading({
+  name,
+  handleUpdateBoardName,
+}: WhiteboardHeadingProps) {
+  const [nameInput, setNameInput] = useState(name);
   const [isEditing, setIsEditing] = useState(false);
 
-  if (board == null || board == undefined) return null;
+  // Update nameInput when name prop changes
+  useEffect(() => {
+    setNameInput(name);
+  }, [name]);
 
   function onSave() {
     setIsEditing(false);
-    if (board) {
-      updateBoardName(board.id, name);
-    }
+    handleUpdateBoardName(nameInput);
   }
 
   return (
-    <div className="flex w-full max-w-50 items-center gap-2">
+    <div className="flex w-full max-w-120 items-center gap-2">
       {isEditing ? (
         <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          type="email"
-          placeholder="Email"
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
+          type="text"
+          placeholder="Name your whiteboard"
         />
       ) : (
-        <span>{name}</span>
+        <span>{nameInput}</span>
       )}
       {isEditing ? (
         <Button type="submit" variant="ghost" size="icon" onClick={onSave}>
