@@ -8,7 +8,12 @@ import {
 } from "@/components/ui/resizable";
 import WhiteboardHeading from "@/components/whiteboard-heading";
 import { useQueryParam } from "@/hooks/use-queryparams";
-import { createBoard, getBoard, updateBoardContent, type Board } from "@/lib/apis";
+import {
+  createBoard,
+  getBoard,
+  updateBoardContent,
+  type Board,
+} from "@/lib/apis";
 import { useAppDispatch, useAppSelector, type RootState } from "@/store";
 import {
   setBoardSplitterPosition,
@@ -31,9 +36,11 @@ export default function Whiteboard() {
   const dispatch = useAppDispatch();
   const [board, setBoard] = useState<Board>();
 
+  const [notes, setNotes] = useState<string>("");
+  const [whiteboardData, setWhiteboardData] = useState<string>("");
+
   const queryParams = useQueryParam();
   const boardCreatedRef = useRef(false);
-  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const autoSaveTimeoutRef = useRef<number | null>(null);
 
   const { boardSplitterPosition } = useAppSelector(
@@ -49,83 +56,42 @@ export default function Whiteboard() {
     );
   }, [dispatch]);
 
-  // Enhanced save function with status tracking
-  const saveToLocalStorage = useCallback(
-    async (
-      boardId: string,
-      updates: { richtext?: string; excalidraw_content?: string },
-      immediate: boolean = false
-    ) => {
-      // Clear any pending auto-save if this is an immediate save
-      if (immediate && autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-        autoSaveTimeoutRef.current = null;
-      }
-
-      setSaveStatus("saving");
-
-      // Queue the save operation to prevent concurrent saves
-      saveQueueRef.current = saveQueueRef.current.then(async () => {
-        try {
-          const savedBoard = await updateBoardContent(boardId, updates);
-          if (savedBoard) {
-            setSaveStatus("saved");
-            setLastSaveTime(new Date());
-            console.log("Board saved successfully to localStorage");
-
-            // Reset status to idle after 2 seconds
-            setTimeout(() => {
-              setSaveStatus("idle");
-            }, 2000);
-          } else {
-            throw new Error("Failed to save board");
-          }
-        } catch (error) {
-          console.error("Error saving board:", error);
-          setSaveStatus("error");
-
-          // Reset error status after 3 seconds
-          setTimeout(() => {
-            setSaveStatus("idle");
-          }, 3000);
-        }
+  const saveToLocalStorage = useCallback(() => {
+    if (!board) return;
+    setSaveStatus("saving");
+    updateBoardContent(board.id, {
+      richtext: notes,
+      excalidraw_content: whiteboardData,
+    })
+      .then(() => {
+        setSaveStatus("saved");
+        setLastSaveTime(new Date());
+      })
+      .catch(() => {
+        setSaveStatus("error");
       });
-    },
-    []
-  );
+  }, [board, notes, whiteboardData]);
 
-  // Debounced auto-save function
-  const debouncedSave = useCallback(
-    (
-      boardId: string,
-      updates: { richtext?: string; excalidraw_content?: string }
-    ) => {
-      // Clear existing timeout
+  // Manual save function for button click
+  useEffect(() => {
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    if (saveStatus === "saving") return;
+
+    // Auto-save after 2 seconds of inactivity
+    autoSaveTimeoutRef.current = window.setTimeout(() => {
+      if (board) {
+        saveToLocalStorage();
+      }
+    }, 2000);
+
+    return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
-
-      // Set new timeout for auto-save (1 second delay)
-      autoSaveTimeoutRef.current = setTimeout(() => {
-        saveToLocalStorage(boardId, updates, false);
-      }, 1000);
-    },
-    [saveToLocalStorage]
-  );
-
-  // Manual save function for button click
-  function handleManualSave() {
-    if (board) {
-      saveToLocalStorage(
-        board.id,
-        {
-          richtext: board.richtext,
-          excalidraw_content: board.excalidraw_content,
-        },
-        true
-      );
-    }
-  }
+    };
+  }, [notes, whiteboardData, board, saveStatus, saveToLocalStorage]); // Trigger on notes or whiteboard data change
 
   useEffect(() => {
     if (queryParams.get("id") == null) {
@@ -151,39 +117,9 @@ export default function Whiteboard() {
     }
   }, [queryParams]);
 
-  const handleWhiteboardChange = (data: string) => {
-    setBoard((prevBoard) =>
-      prevBoard
-        ? {
-            ...prevBoard,
-            excalidraw_content: data,
-          }
-        : undefined
-    );
-    if (board) {
-      // Use debounced save for auto-save on changes
-      debouncedSave(board.id, { excalidraw_content: data });
-    }
-  };
-
-  const handleNotesChange = (value: string) => {
-    setBoard((prevBoard) =>
-      prevBoard
-        ? {
-            ...prevBoard,
-            richtext: value,
-          }
-        : undefined
-    );
-    if (board) {
-      // Use debounced save for auto-save on changes
-      debouncedSave(board.id, { richtext: value });
-    }
-  };
-
-  const handleSaveBoard = () => {
-    handleManualSave();
-  };
+  function handleOnSave() {
+    saveToLocalStorage();
+  }
 
   const toggleEditor = () => {
     setIsEditorVisible(!isEditorVisible);
@@ -239,7 +175,7 @@ export default function Whiteboard() {
             )}
           </Button>
           <Button
-            onClick={handleSaveBoard}
+            onClick={handleOnSave}
             variant={saveStatus === "error" ? "destructive" : "default"}
             size="sm"
             className="w-32 flex items-center gap-2"
@@ -273,7 +209,7 @@ export default function Whiteboard() {
             <div className="flex-1">
               <RichtextEditor
                 initialValue={board?.richtext || ""}
-                onChange={handleNotesChange}
+                onChange={setNotes}
               />
             </div>
           </div>
@@ -291,7 +227,7 @@ export default function Whiteboard() {
             <div className="flex-1">
               <BoardComponent
                 initialData={board?.excalidraw_content || undefined}
-                onChange={handleWhiteboardChange}
+                onChange={(data) => setWhiteboardData(data)}
               />
             </div>
           </div>
