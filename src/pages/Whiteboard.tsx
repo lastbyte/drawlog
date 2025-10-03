@@ -14,17 +14,27 @@ import {
   setBoardSplitterPosition,
   setBreadCrumbs,
 } from "@/store/slices/appSlice";
-import { SidebarCloseIcon, SidebarOpenIcon } from "lucide-react";
+import {
+  SidebarCloseIcon,
+  SidebarOpenIcon,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export default function Whiteboard() {
   const [isEditorVisible, setIsEditorVisible] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const dispatch = useAppDispatch();
   const [board, setBoard] = useState<Board>();
 
   const queryParams = useQueryParam();
   const boardCreatedRef = useRef(false);
   const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const autoSaveTimeoutRef = useRef<number | null>(null);
 
   const { boardSplitterPosition } = useAppSelector(
     (state: RootState) => state.app
@@ -37,42 +47,85 @@ export default function Whiteboard() {
         { title: "Whiteboard", location: "/whiteboard" },
       ])
     );
-  }, []);
+  }, [dispatch]);
 
-  function saveBoard() {
-    if (board) {
-      updateBoardContent(board.id, {
-        richtext: board.richtext,
-        tldraw_content: board.tldraw_content,
-      })
-        .then(() => {
-          console.log("Board saved successfully");
-        })
-        .catch((error) => {
-          console.error("Error saving board:", error);
-        });
-    }
-  }
-
-  // Immediate save function with queue to prevent concurrent saves
-  const immediateSave = useCallback(
+  // Enhanced save function with status tracking
+  const saveToLocalStorage = useCallback(
     async (
       boardId: string,
-      updates: { richtext?: string; tldraw_content?: string }
+      updates: { richtext?: string; tldraw_content?: string },
+      immediate: boolean = false
     ) => {
+      // Clear any pending auto-save if this is an immediate save
+      if (immediate && autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+        autoSaveTimeoutRef.current = null;
+      }
+
+      setSaveStatus("saving");
+
       // Queue the save operation to prevent concurrent saves
       saveQueueRef.current = saveQueueRef.current.then(async () => {
         try {
-          await updateBoardContent(boardId, updates);
-          console.log("Board saved successfully");
+          const savedBoard = await updateBoardContent(boardId, updates);
+          if (savedBoard) {
+            setSaveStatus("saved");
+            setLastSaveTime(new Date());
+            console.log("Board saved successfully to localStorage");
+
+            // Reset status to idle after 2 seconds
+            setTimeout(() => {
+              setSaveStatus("idle");
+            }, 2000);
+          } else {
+            throw new Error("Failed to save board");
+          }
         } catch (error) {
           console.error("Error saving board:", error);
-          // Could implement retry logic here
+          setSaveStatus("error");
+
+          // Reset error status after 3 seconds
+          setTimeout(() => {
+            setSaveStatus("idle");
+          }, 3000);
         }
       });
     },
     []
   );
+
+  // Debounced auto-save function
+  const debouncedSave = useCallback(
+    (
+      boardId: string,
+      updates: { richtext?: string; tldraw_content?: string }
+    ) => {
+      // Clear existing timeout
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+
+      // Set new timeout for auto-save (1 second delay)
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        saveToLocalStorage(boardId, updates, false);
+      }, 1000);
+    },
+    [saveToLocalStorage]
+  );
+
+  // Manual save function for button click
+  function handleManualSave() {
+    if (board) {
+      saveToLocalStorage(
+        board.id,
+        {
+          richtext: board.richtext,
+          tldraw_content: board.tldraw_content,
+        },
+        true
+      );
+    }
+  }
 
   useEffect(() => {
     if (queryParams.get("id") == null) {
@@ -96,7 +149,7 @@ export default function Whiteboard() {
         }
       });
     }
-  }, []);
+  }, [queryParams]);
 
   const handleWhiteboardChange = (data: string) => {
     setBoard((prevBoard) =>
@@ -108,7 +161,8 @@ export default function Whiteboard() {
         : undefined
     );
     if (board) {
-      immediateSave(board.id, { tldraw_content: data });
+      // Use debounced save for auto-save on changes
+      debouncedSave(board.id, { tldraw_content: data });
     }
   };
 
@@ -122,23 +176,52 @@ export default function Whiteboard() {
         : undefined
     );
     if (board) {
-      immediateSave(board.id, { richtext: value });
+      // Use debounced save for auto-save on changes
+      debouncedSave(board.id, { richtext: value });
     }
   };
 
   const handleSaveBoard = () => {
-    saveBoard();
+    handleManualSave();
   };
 
   const toggleEditor = () => {
     setIsEditorVisible(!isEditorVisible);
   };
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Get save button text and icon based on status
+  const getSaveButtonProps = () => {
+    switch (saveStatus) {
+      case "saving":
+        return { text: "Saving...", disabled: true };
+      case "saved":
+        return { text: "Saved", disabled: false };
+      case "error":
+        return { text: "Save Failed", disabled: false };
+      default:
+        return { text: "Save", disabled: false };
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col gap-2">
       <div className="mb-2 flex items-center justify-between px-2">
         <WhiteboardHeading board={board} />
-        <div className="flex gap-2 items-end">
+        <div className="flex gap-2 items-center">
+          {lastSaveTime && saveStatus !== "saving" && (
+            <div className="text-xs text-gray-500 mr-2">
+              Last saved: {lastSaveTime.toLocaleTimeString()}
+            </div>
+          )}
           <Button
             onClick={toggleEditor}
             variant="outline"
@@ -147,21 +230,27 @@ export default function Whiteboard() {
           >
             {isEditorVisible ? (
               <>
-                <SidebarCloseIcon /> Hide Notes
+                <SidebarCloseIcon className="w-4 h-4 mr-1" /> Hide Notes
               </>
             ) : (
               <>
-                <SidebarOpenIcon /> Show Notes
+                <SidebarOpenIcon className="w-4 h-4 mr-1" /> Show Notes
               </>
             )}
           </Button>
           <Button
             onClick={handleSaveBoard}
-            variant="default"
+            variant={saveStatus === "error" ? "destructive" : "default"}
             size="sm"
-            className="w-25"
+            className="w-32 flex items-center gap-2"
+            disabled={getSaveButtonProps().disabled}
           >
-            {isEditorVisible ? "save" : "saving"}
+            {saveStatus === "saving" && (
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {saveStatus === "saved" && <CheckCircle className="w-4 h-4" />}
+            {saveStatus === "error" && <AlertCircle className="w-4 h-4" />}
+            <span>{getSaveButtonProps().text}</span>
           </Button>
         </div>
       </div>
