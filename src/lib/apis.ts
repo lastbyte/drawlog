@@ -5,7 +5,7 @@ export interface Board {
   id: string;
   name: string;
   richtext: string;
-  tldraw_content: string;
+  excalidraw_content: string;
   created_at: string;
   updated_at: string;
 }
@@ -13,13 +13,13 @@ export interface Board {
 export interface BoardCreateInput {
   name: string;
   richtext?: string;
-  tldraw_content?: string;
+  excalidraw_content?: string;
 }
 
 export interface BoardUpdateInput {
   name?: string;
   richtext?: string;
-  tldraw_content?: string;
+  excalidraw_content?: string;
 }
 
 export interface QueryOptions {
@@ -99,9 +99,9 @@ class BoardStorageAPI {
       id: this.generateId(),
       name: input.name,
       richtext: input.richtext || "",
-      tldraw_content:
-        input.tldraw_content ||
-        '{"elements": [], "appState": {"collaborators": {}}}',
+      excalidraw_content:
+        input.excalidraw_content ||
+        '{"elements": [], "appState": {}}',
       created_at: timestamp,
       updated_at: timestamp,
     };
@@ -248,7 +248,7 @@ class BoardStorageAPI {
     const duplicatedBoard = await this.create({
       name: newName || `Copy of ${originalBoard.name}`,
       richtext: originalBoard.richtext,
-      tldraw_content: originalBoard.tldraw_content,
+      excalidraw_content: originalBoard.excalidraw_content,
     });
 
     return duplicatedBoard;
@@ -331,11 +331,11 @@ export async function updateBoardName(
 }
 
 /**
- * Update board content (richtext or tldraw_content)
+ * Update board content (richtext or excalidraw_content)
  */
 export async function updateBoardContent(
   id: string,
-  content: { richtext?: string; tldraw_content?: string }
+  content: { richtext?: string; excalidraw_content?: string }
 ): Promise<Board | null> {
   return boardAPI.updateById(id, content);
 }

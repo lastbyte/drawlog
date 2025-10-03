@@ -83,20 +83,18 @@ declare global {
   }
 
   // Board and storage types
-  interface Board {
-    id: string;
-    name: string;
-    richtext: string;
-    tldraw_content: string;
-    created_at: string;
-    updated_at: string;
-  }
+interface BoardData {
+  id: string;
+  title: string;
+  description: string;
+  excalidraw_content: string;
+}
 
-  // Component prop types for common UI patterns
-  interface BaseComponentProps {
-    className?: string;
-    children?: ReactNode;
-  }
+// Component prop types for common UI patterns
+interface BaseComponentProps {
+  className?: string;
+  children?: ReactNode;
+}
 
   interface IconProps extends BaseComponentProps {
     size?: number | string;

@@ -1,4 +1,4 @@
-import Board from "@/components/board";
+import BoardComponent from "@/components/board";
 import { RichtextEditor } from "@/components/richtext-editor";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/resizable";
 import WhiteboardHeading from "@/components/whiteboard-heading";
 import { useQueryParam } from "@/hooks/use-queryparams";
-import { createBoard, getBoard, updateBoardContent } from "@/lib/apis";
+import { createBoard, getBoard, updateBoardContent, type Board } from "@/lib/apis";
 import { useAppDispatch, useAppSelector, type RootState } from "@/store";
 import {
   setBoardSplitterPosition,
@@ -53,7 +53,7 @@ export default function Whiteboard() {
   const saveToLocalStorage = useCallback(
     async (
       boardId: string,
-      updates: { richtext?: string; tldraw_content?: string },
+      updates: { richtext?: string; excalidraw_content?: string },
       immediate: boolean = false
     ) => {
       // Clear any pending auto-save if this is an immediate save
@@ -98,7 +98,7 @@ export default function Whiteboard() {
   const debouncedSave = useCallback(
     (
       boardId: string,
-      updates: { richtext?: string; tldraw_content?: string }
+      updates: { richtext?: string; excalidraw_content?: string }
     ) => {
       // Clear existing timeout
       if (autoSaveTimeoutRef.current) {
@@ -120,7 +120,7 @@ export default function Whiteboard() {
         board.id,
         {
           richtext: board.richtext,
-          tldraw_content: board.tldraw_content,
+          excalidraw_content: board.excalidraw_content,
         },
         true
       );
@@ -156,13 +156,13 @@ export default function Whiteboard() {
       prevBoard
         ? {
             ...prevBoard,
-            tldraw_content: data,
+            excalidraw_content: data,
           }
         : undefined
     );
     if (board) {
       // Use debounced save for auto-save on changes
-      debouncedSave(board.id, { tldraw_content: data });
+      debouncedSave(board.id, { excalidraw_content: data });
     }
   };
 
@@ -289,8 +289,8 @@ export default function Whiteboard() {
         >
           <div className="flex h-full flex-col p-2">
             <div className="flex-1">
-              <Board
-                initialData={board?.tldraw_content || undefined}
+              <BoardComponent
+                initialData={board?.excalidraw_content || undefined}
                 onChange={handleWhiteboardChange}
               />
             </div>
