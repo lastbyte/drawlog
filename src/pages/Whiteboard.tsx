@@ -21,18 +21,35 @@ import {
   setBreadCrumbs,
 } from "@/store/slices/appSlice";
 import {
-  SidebarCloseIcon,
-  SidebarOpenIcon,
-  CheckCircle,
   AlertCircle,
+  CheckCircle,
+  Columns2Icon,
+  SquarePenIcon,
+  WallpaperIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { useNavigate } from "react-router-dom";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/**
+ * Whiteboard Component with State-Controlled Resizable Split
+ *
+ * This component demonstrates how to control resizable panels using state:
+ *
+ * 1. Split percentage is stored in Redux (boardSplitterPosition)
+ * 2. Use setSplitPercentage(percentage) to programmatically set split
+ * 3. Use showEditor(percentage) to show editor with specific split
+ * 4. Use hideEditor() to hide the editor completely
+ * 5. The key prop forces re-render when state changes are needed
+ *
+ * Example usage:
+ * - Click the percentage buttons (25%, 40%, 50%, 60%) to see state control
+ * - The split position persists in Redux state
+ * - Toggle visibility while maintaining split preference
+ */
 export default function Whiteboard() {
-  const [isEditorVisible, setIsEditorVisible] = useState(true);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   const dispatch = useAppDispatch();
@@ -46,9 +63,19 @@ export default function Whiteboard() {
   const autoSaveTimeoutRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
+  // Refs for imperative panel control
+  const editorPanelRef = useRef<ImperativePanelHandle>(null);
+  const whiteboardPanelRef = useRef<ImperativePanelHandle>(null);
+
   const { boardSplitterPosition } = useAppSelector(
     (state: RootState) => state.app
   );
+
+  // Default split position when editor is visible
+  const DEFAULT_EDITOR_SIZE = 40;
+
+  // Key to force re-render when we need to reset panel sizes
+  const [panelKey, setPanelKey] = useState(0);
 
   useEffect(() => {
     dispatch(
@@ -124,7 +151,7 @@ export default function Whiteboard() {
         }
       });
     }
-  }, [queryParams]);
+  }, [queryParams, navigate]);
 
   function handleOnSave() {
     saveToLocalStorage();
@@ -138,9 +165,33 @@ export default function Whiteboard() {
     }
   }
 
-  const toggleEditor = () => {
-    setIsEditorVisible(!isEditorVisible);
-  };
+  // Utility functions for programmatic control
+  /**
+   * Sets the split percentage between editor and whiteboard
+   * @param percentage - The percentage of space for the editor (20-80%)
+   */
+  const setSplitPercentage = useCallback(
+    (percentage: number) => {
+      dispatch(setBoardSplitterPosition(percentage));
+
+      // Force re-render with new sizes by updating the key
+      setPanelKey((prev) => prev + 1);
+    },
+    [dispatch]
+  );
+
+  /**
+   * Gets the current split percentage
+   * @returns The current percentage of space allocated to the editor
+   */
+  // const getCurrentSplitPercentage = useCallback(() => {
+  //   return boardSplitterPosition ?? DEFAULT_EDITOR_SIZE;
+  // }, [boardSplitterPosition]);
+
+  // Calculate current sizes
+  const currentEditorSize = boardSplitterPosition ?? DEFAULT_EDITOR_SIZE;
+  const currentWhiteboardSize =
+    100 - (boardSplitterPosition ?? DEFAULT_EDITOR_SIZE);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -173,32 +224,48 @@ export default function Whiteboard() {
           handleUpdateBoardName={handleUpdateBoardName}
         />
         <div className="flex gap-2 items-center">
+          {/* Split Control Buttons */}
+          {
+            <div className="flex gap-1 mr-2 items-center">
+              <span className="text-xs text-gray-600 mr-1">Layout </span>
+              <Button
+                onClick={() => setSplitPercentage(0)}
+                variant="ghost"
+                size="sm"
+                className="text-xs px-2 cursor-pointer"
+              >
+                <WallpaperIcon /> Board Only
+              </Button>
+              <Button
+                onClick={() => setSplitPercentage(100)}
+                variant="ghost"
+                size="sm"
+                className="text-xs px-2 cursor-pointer"
+              >
+                <SquarePenIcon /> Text Only
+              </Button>
+              <Button
+                onClick={() => setSplitPercentage(50)}
+                variant="ghost"
+                size="sm"
+                className="text-xs px-2 cursor-pointer"
+              >
+                <Columns2Icon />
+                Both
+              </Button>
+            </div>
+          }
+
           {lastSaveTime && saveStatus !== "saving" && (
             <div className="text-xs text-gray-500 mr-2">
               Last saved: {lastSaveTime.toLocaleTimeString()}
             </div>
           )}
           <Button
-            onClick={toggleEditor}
-            variant="outline"
-            size="sm"
-            className="w-30"
-          >
-            {isEditorVisible ? (
-              <>
-                <SidebarCloseIcon className="w-4 h-4 mr-1" /> Hide Notes
-              </>
-            ) : (
-              <>
-                <SidebarOpenIcon className="w-4 h-4 mr-1" /> Show Notes
-              </>
-            )}
-          </Button>
-          <Button
             onClick={handleOnSave}
             variant={saveStatus === "error" ? "destructive" : "default"}
             size="sm"
-            className="w-32 flex items-center gap-2"
+            className="w-32 flex items-center gap-2 cursor-pointer"
             disabled={getSaveButtonProps().disabled}
           >
             {saveStatus === "saving" && (
@@ -211,19 +278,19 @@ export default function Whiteboard() {
         </div>
       </div>
       <ResizablePanelGroup
+        key={panelKey}
         direction="horizontal"
         className="w-full flex-1 rounded-lg"
       >
         <ResizablePanel
-          defaultSize={isEditorVisible ? boardSplitterPosition : 0}
-          minSize={isEditorVisible ? 30 : 0}
-          className={`${!isEditorVisible ? "hidden" : ""}`}
+          ref={editorPanelRef}
+          defaultSize={currentEditorSize}
+          minSize={0}
           onResize={(size) => {
-            // size is in percentage
-            // console.log("Editor panel resized to:", size);
-            // update the redux state
+            // Only update state if the size actually changed to avoid infinite loops
             dispatch(setBoardSplitterPosition(size));
           }}
+          collapsible={false}
         >
           <div className="flex h-full flex-col pr-2">
             <div className="flex-1">
@@ -236,16 +303,16 @@ export default function Whiteboard() {
         </ResizablePanel>
         <ResizableHandle
           withHandle
-          className={!isEditorVisible ? "hidden" : ""}
+          className="border-2 bg-none hover:border-gray-400"
         />
         <ResizablePanel
-          defaultSize={
-            isEditorVisible ? 100 - (boardSplitterPosition ?? 0) : 100
-          }
-          minSize={30}
+          ref={whiteboardPanelRef}
+          defaultSize={currentWhiteboardSize}
+          minSize={0}
+          collapsible={false}
         >
           <div
-            className="flex h-full flex-col p-2"
+            className="flex h-full flex-col px-2"
             style={{ minHeight: "400px" }}
           >
             <div
@@ -263,3 +330,11 @@ export default function Whiteboard() {
     </div>
   );
 }
+
+// Export utility functions for external control (if needed)
+export type WhiteboardSplitControl = {
+  setSplitPercentage: (percentage: number) => void;
+  showEditor: (percentage?: number) => void;
+  hideEditor: () => void;
+  getCurrentSplitPercentage: () => number;
+};

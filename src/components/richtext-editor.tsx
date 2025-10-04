@@ -82,7 +82,7 @@ export const RichtextEditor = (props: {
       .init({
         target: textareaRef.current!,
         height: 400,
-        menubar: true,
+        menubar: false,
         statusbar: false,
         plugins: [
           "advlist",
@@ -102,12 +102,18 @@ export const RichtextEditor = (props: {
           "table",
           "help",
           "wordcount",
+          "quickbars",
         ],
         toolbar:
-          "undo redo | blocks | " +
-          "bold italic forecolor | alignleft aligncenter " +
+          "undo redo | " +
+          "bold italic forecolor | table image link |" +
+          "alignleft aligncenter | " +
           "alignright alignjustify | bullist numlist outdent indent | " +
           "removeformat | help",
+        quickbars_selection_toolbar:
+          "bold italic | blocks | quicklink blockquote",
+        quickbars_insert_toolbar: false,
+        toolbar_mode: "sliding",
         content_style:
           "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
         init_instance_callback: (editor: any) => {

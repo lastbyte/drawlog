@@ -30,6 +30,11 @@ export default function WhiteboardHeading({
         <Input
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              onSave();
+            }
+          }}
           type="text"
           placeholder="Name your whiteboard"
         />

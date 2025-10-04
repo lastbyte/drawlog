@@ -180,18 +180,8 @@ export default function Board({ initialData, onChange }: BoardProps) {
 
   return (
     <div className="flex h-full w-full flex-col relative overflow-hidden">
-      <div
-        className="flex h-full w-full flex-1 overflow-hidden"
-        style={{
-          minHeight: "400px",
-          minWidth: "400px",
-          maxHeight: "calc(100vh - 100px)", // Leave some margin for UI
-          maxWidth: "calc(100vw - 100px)", // Leave some margin for UI
-          height: "100%",
-          width: "100%",
-        }}
-      >
-        <div style={{ width: "100%", height: "100%" }}>
+      <div className="flex h-full w-full flex-1 overflow-hidden">
+        <div className="w-full h-full border-2 rounded-lg border-[#eee]">
           <ExcalidrawErrorBoundary>
             <Excalidraw
               initialData={parsedInitialData}
