@@ -257,7 +257,7 @@ export default function Whiteboard() {
                 <SquarePenIcon /> Text Only
               </Button>
               <Button
-                onClick={() => setSplitPercentage(boardSplitterPosition ?? 50)}
+                onClick={() => setSplitPercentage(50)}
                 variant="ghost"
                 size="sm"
                 className="text-xs px-2 cursor-pointer"
@@ -312,12 +312,14 @@ export default function Whiteboard() {
             </div>
           </div>
         </ResizablePanel>
-        {currentEditorSize > 0 && currentEditorSize < 100 && (
-          <ResizableHandle
-            withHandle
-            className="border-2 bg-none hover:border-gray-400"
-          />
-        )}
+        <ResizableHandle
+          withHandle
+          className={`border-2 bg-none hover:border-gray-400 ${
+            currentEditorSize <= 0 || currentEditorSize >= 100
+              ? "invisible"
+              : "visible"
+          }`}
+        />
         <ResizablePanel
           ref={whiteboardPanelRef}
           defaultSize={currentWhiteboardSize}
