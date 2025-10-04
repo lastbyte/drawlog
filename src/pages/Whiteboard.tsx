@@ -27,6 +27,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -43,6 +44,7 @@ export default function Whiteboard() {
   const queryParams = useQueryParam();
   const boardCreatedRef = useRef(false);
   const autoSaveTimeoutRef = useRef<number | null>(null);
+  const navigate = useNavigate();
 
   const { boardSplitterPosition } = useAppSelector(
     (state: RootState) => state.app
@@ -103,7 +105,7 @@ export default function Whiteboard() {
       // create a new whiteboard
       createBoard({ name: "Untitled Whiteboard" }).then((board) => {
         // update the url with the new board id
-        window.history.replaceState(null, "", `/whiteboard?id=${board.id}`);
+        navigate(`/whiteboard?id=${board.id}`, { replace: true });
         setBoard(board);
         // Initialize local state for new board
         setNotes(board.richtext || "");
