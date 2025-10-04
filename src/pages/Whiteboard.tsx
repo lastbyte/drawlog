@@ -245,7 +245,7 @@ export default function Whiteboard() {
                 <SquarePenIcon /> Text Only
               </Button>
               <Button
-                onClick={() => setSplitPercentage(50)}
+                onClick={() => setSplitPercentage(boardSplitterPosition ?? 50)}
                 variant="ghost"
                 size="sm"
                 className="text-xs px-2 cursor-pointer"
