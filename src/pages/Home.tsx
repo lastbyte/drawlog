@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/store";
 import { setBreadCrumbs } from "@/store/slices/appSlice";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   const dispatch = useAppDispatch();
@@ -22,7 +23,7 @@ export default function Home() {
         className="rounded-sm px-10 py-6 cursor-pointer"
         asChild
       >
-        <a href="/whiteboard">Get Started</a>
+        <Link to="/whiteboard">Get Started</Link>
       </Button>
     </div>
   );
