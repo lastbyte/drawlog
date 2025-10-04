@@ -312,10 +312,12 @@ export default function Whiteboard() {
             </div>
           </div>
         </ResizablePanel>
-        <ResizableHandle
-          withHandle
-          className="border-2 bg-none hover:border-gray-400"
-        />
+        {currentEditorSize > 0 && currentEditorSize < 100 && (
+          <ResizableHandle
+            withHandle
+            className="border-2 bg-none hover:border-gray-400"
+          />
+        )}
         <ResizablePanel
           ref={whiteboardPanelRef}
           defaultSize={currentWhiteboardSize}
