@@ -97,7 +97,7 @@ export default function Whiteboard() {
       })
       .catch(() => {})
       .finally(() => {
-        setSaveStatus("saved");
+        setSaveStatus("idle");
       });
   }, [board, notes, whiteboardData]);
 
