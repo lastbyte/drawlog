@@ -94,12 +94,25 @@ export default function Whiteboard() {
       excalidraw_content: whiteboardData,
     })
       .then(() => {
-        setSaveStatus("saved");
         setLastSaveTime(new Date());
       })
-      .catch(() => {
-        setSaveStatus("error");
+      .catch(() => {})
+      .finally(() => {
+        setSaveStatus("saved");
       });
+  }, [board, notes, whiteboardData]);
+
+  // check is ant of the content has changed
+  useEffect(() => {
+    if (board == null) return;
+    if (
+      board.richtext === notes &&
+      board.excalidraw_content === whiteboardData
+    ) {
+      setSaveStatus("saved");
+      return;
+    }
+    setSaveStatus("idle");
   }, [board, notes, whiteboardData]);
 
   // Manual save function for button click
@@ -109,12 +122,12 @@ export default function Whiteboard() {
     }
     if (saveStatus === "saving") return;
 
-    // Auto-save after 2 seconds of inactivity
+    // Auto-save after 0.5 seconds of inactivity
     autoSaveTimeoutRef.current = window.setTimeout(() => {
       if (board) {
         saveToLocalStorage();
       }
-    }, 2000);
+    }, 500);
 
     return () => {
       if (autoSaveTimeoutRef.current) {
@@ -272,7 +285,6 @@ export default function Whiteboard() {
               <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
             )}
             {saveStatus === "saved" && <CheckCircle className="w-4 h-4" />}
-            {saveStatus === "error" && <AlertCircle className="w-4 h-4" />}
             <span>{getSaveButtonProps().text}</span>
           </Button>
         </div>
