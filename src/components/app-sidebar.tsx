@@ -49,18 +49,7 @@ const data = {
       icon: PlusCircleIcon,
     },
   ],
-  favorites: [
-    {
-      name: "Design Youtube",
-      url: "#",
-      emoji: "📊",
-    },
-    {
-      name: "Design a distributed key-value store",
-      url: "#",
-      emoji: "🍳",
-    },
-  ],
+  favorites: [],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
