@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=SUSE+Mono:ital,wght@0,100..800;1,100..800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -120,11 +122,36 @@
 }
 
 .tox.tox-hugerte {
+  font-family: "SUSE Mono", monospace !important;
   height: 100% !important;
   border-radius: 0px;
   border: none !important;
   border-top: 1px solid #eee !important;
   border-bottom: 1px solid #eee !important;
+}
+
+/* Target all possible editor content elements */
+.tox-edit-area iframe,
+.tox-edit-area iframe body,
+.tox-edit-area iframe body *,
+.tox .tox-edit-area,
+.tox .tox-edit-area body,
+.tox .tox-edit-area body *,
+.tox-editor-container iframe,
+.tox-editor-container iframe body,
+.tox-editor-container iframe body *,
+div[data-alloy-id] iframe,
+div[data-alloy-id] iframe body,
+div[data-alloy-id] iframe body * {
+  font-family: "SUSE Mono", monospace !important;
+}
+
+/* Force font on HugeRTE content */
+.hugerte-content,
+.hugerte-content *,
+.mce-content-body,
+.mce-content-body * {
+  font-family: "SUSE Mono", monospace !important;
 }
 
 .bg-dotted {

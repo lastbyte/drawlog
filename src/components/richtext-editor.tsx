@@ -114,14 +114,73 @@ export const RichtextEditor = (props: {
           "bold italic | blocks | quicklink blockquote",
         quickbars_insert_toolbar: false,
         toolbar_mode: "sliding",
-        content_style:
-          "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+        font_formats: "SUSE Mono='SUSE Mono',monospace;Monospace=monospace",
+        content_style: `
+          @import url('https://fonts.googleapis.com/css2?family=SUSE+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+          body { 
+            font-family: 'SUSE Mono', monospace !important; 
+            font-size: 14px !important; 
+          } 
+          * { 
+            font-family: 'SUSE Mono', monospace !important; 
+          }
+          p, div, span { 
+            font-family: 'SUSE Mono', monospace !important; 
+          }
+        `,
+        setup: (editor: any) => {
+          editor.on("init", () => {
+            // Multiple attempts to force font after initialization
+            const applyFont = () => {
+              const editorBody = editor.getBody();
+              const iframe = editor
+                .getContentAreaContainer()
+                .querySelector("iframe");
+
+              if (editorBody) {
+                editorBody.style.setProperty(
+                  "font-family",
+                  '"SUSE Mono", monospace',
+                  "important"
+                );
+              }
+
+              if (iframe && iframe.contentDocument) {
+                const iframeBody = iframe.contentDocument.body;
+                if (iframeBody) {
+                  iframeBody.style.setProperty(
+                    "font-family",
+                    '"SUSE Mono", monospace',
+                    "important"
+                  );
+                }
+              }
+            };
+
+            // Apply immediately and with delays
+            applyFont();
+            setTimeout(applyFont, 100);
+            setTimeout(applyFont, 500);
+          });
+        },
         init_instance_callback: (editor: any) => {
           editorRef.current = editor;
 
           editor.on("Change", () => {
             onChange(editor.getContent());
           });
+
+          // Apply font with delay
+          setTimeout(() => {
+            const editorBody = editor.getBody();
+            if (editorBody) {
+              editorBody.style.setProperty(
+                "font-family",
+                '"SUSE Mono", monospace',
+                "important"
+              );
+            }
+          }, 1000);
         },
       })
       .catch((error: any) => {
@@ -135,6 +194,38 @@ export const RichtextEditor = (props: {
       editorRef.current.setContent(initialValue);
     }
   }, [initialValue]);
+
+  // Aggressively ensure font is applied
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (editorRef.current) {
+        const editorBody = editorRef.current.getBody();
+        if (editorBody) {
+          // Check if font is applied correctly
+          const computedStyle = window.getComputedStyle(editorBody);
+          if (!computedStyle.fontFamily.includes("SUSE Mono")) {
+            editorBody.style.setProperty(
+              "font-family",
+              '"SUSE Mono", monospace',
+              "important"
+            );
+
+            // Also apply to all existing content
+            const allElements = editorBody.querySelectorAll("*");
+            allElements.forEach((el: HTMLElement) => {
+              el.style.setProperty(
+                "font-family",
+                '"SUSE Mono", monospace',
+                "important"
+              );
+            });
+          }
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -154,7 +245,7 @@ export const RichtextEditor = (props: {
           height: "100%",
           border: "1px solid #ccc",
           padding: "10px",
-          fontFamily: "monospace",
+          fontFamily: "'SUSE Mono', monospace",
           fontSize: "14px",
           resize: "none",
         }}
