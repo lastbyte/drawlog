@@ -303,7 +303,7 @@ export default function Whiteboard() {
           }}
           collapsible={false}
         >
-          <div className="flex h-full flex-col pr-2">
+          <div className="flex h-full flex-col">
             <div className="flex-1">
               <RichtextEditor
                 initialValue={board?.richtext || ""}
@@ -326,10 +326,7 @@ export default function Whiteboard() {
           minSize={0}
           collapsible={false}
         >
-          <div
-            className="flex h-full flex-col px-2"
-            style={{ minHeight: "400px" }}
-          >
+          <div className="flex h-full flex-col" style={{ minHeight: "400px" }}>
             <div
               className="flex-1"
               style={{ minWidth: "400px", minHeight: "400px" }}

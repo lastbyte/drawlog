@@ -121,6 +121,10 @@
 
 .tox.tox-hugerte {
   height: 100% !important;
+  border-radius: 0px;
+  border: none !important;
+  border-top: 1px solid #eee !important;
+  border-bottom: 1px solid #eee !important;
 }
 
 .bg-dotted {

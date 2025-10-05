@@ -181,7 +181,7 @@ export default function Board({ initialData, onChange }: BoardProps) {
   return (
     <div className="flex h-full w-full flex-col relative overflow-hidden">
       <div className="flex h-full w-full flex-1 overflow-hidden">
-        <div className="w-full h-full border-2 rounded-lg border-[#eee]">
+        <div className="w-full h-full">
           <ExcalidrawErrorBoundary>
             <Excalidraw
               initialData={parsedInitialData}
