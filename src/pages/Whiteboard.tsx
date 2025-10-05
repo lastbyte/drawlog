@@ -291,7 +291,7 @@ export default function Whiteboard() {
       <ResizablePanelGroup
         key={panelKey}
         direction="horizontal"
-        className="w-full flex-1 rounded-lg"
+        className="w-full flex-1 rounded-lg border-x-1 border-[#eee]"
       >
         <ResizablePanel
           ref={editorPanelRef}
@@ -312,30 +312,18 @@ export default function Whiteboard() {
             </div>
           </div>
         </ResizablePanel>
-        <ResizableHandle
-          withHandle
-          className={`border-2 bg-none hover:border-gray-400 ${
-            currentEditorSize <= 0 || currentEditorSize >= 100
-              ? "invisible"
-              : "visible"
-          }`}
-        />
+        <ResizableHandle withHandle />
         <ResizablePanel
           ref={whiteboardPanelRef}
           defaultSize={currentWhiteboardSize}
           minSize={0}
           collapsible={false}
         >
-          <div className="flex h-full flex-col" style={{ minHeight: "400px" }}>
-            <div
-              className="flex-1"
-              style={{ minWidth: "400px", minHeight: "400px" }}
-            >
-              <BoardComponent
-                initialData={board?.excalidraw_content || undefined}
-                onChange={(data) => setWhiteboardData(data)}
-              />
-            </div>
+          <div className="flex h-full flex-col border-y-1 border-[#eee]">
+            <BoardComponent
+              initialData={board?.excalidraw_content || undefined}
+              onChange={(data) => setWhiteboardData(data)}
+            />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
